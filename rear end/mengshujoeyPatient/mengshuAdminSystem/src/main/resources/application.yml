@@ -1,0 +1,95 @@
+#设置eureka基本信息
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+server:
+  port: 8080
+  servlet:
+    context-path: /joeyAdminSystem
+#设置feign的超时时长
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 3000
+#配置hystrix熔断器
+hystrix:
+  metrics:
+    enabled: true
+logging:
+  level:
+    com.mengshujoey.mengshuadminsystem: debug
+spring:
+  mail:
+    username: ****
+    password: ****
+    host: smtp.qq.com
+    default-encoding: utf-8
+  application:
+    name: joey-admin-system
+  profiles:
+    active: test
+  cache:
+    type: redis
+    redis:
+      time-to-live: 20000
+      cache-null-values: false
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      enabled: true
+      file-size-threshold: 10MB
+  datasource:
+    username: ****
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    password: ****
+    url: jdbc:mysql://****?serverTimezone=Asia/Shanghai&characterEncoding=utf-8
+    hikari:
+      connection-timeout: 10000
+      validation-timeout: 3000
+      idle-timeout: 60000
+      login-timeout: 5
+      max-lifetime: 60000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      read-only: false
+  redis:
+    host: localhost
+    jedis:
+      pool:
+        max-idle: 500
+        max-wait: 100
+        max-active: 1000
+        min-idle: 100
+    timeout: 1000
+  rabbitmq:
+    port: ****
+    host: ****
+    username: ****
+    password: ****
+    virtual-host: /
+mybatis-plus:
+  #配置MyBatis映射文件
+  mapper-locations: classpath:/mapper/*.xml
+  #配置MyBatis返回类型别名
+  type-aliases-package: com.mengCommon.backend.pojo
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: true
+    jdbc-type-for-null: 'null'
+    default-statement-timeout: 3000
+  #    日志输出
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      update-strategy: ignored
+page helper:
+  helperDialect: mysql
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=countSql

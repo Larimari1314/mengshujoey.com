@@ -1,0 +1,91 @@
+server:
+  port: 8082
+logging:
+  level:
+    com.mengshujoey.mengshusystemgateway: debug
+spring:
+  application:
+    name: api-gateway-server
+  cache:
+    type: redis
+    redis:
+      time-to-live: 20000
+      cache-null-values: false
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      enabled: true
+      file-size-threshold: 10MB
+  cloud:
+    # 网关配置
+    gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors‐configurations:
+          '[/**]': # 匹配请求
+            # allowedOrigins: "*"
+            #allowedOriginPatterns: '' #跨域处理 允许所有的域
+            allowedOriginPatterns: '*'
+            allowCredentials: true # 是否允许携带cookie
+            allowedMethods: # 支持的方法
+              - "GET"
+              - "POST"
+              - "DELETE"
+              - "PUT"
+              - "OPTIONS"
+            allowedHeaders: "*" # 允许在请求中携带的头信息
+      # 路由配置
+      routes: # 集合
+        - id: joey-admin-system
+          uri: lb://joey-admin-system
+          order: 2
+          predicates:
+            - Path=/joeyAdminSystem/**
+          filters:
+            - StripPrefix= 1
+        - id: joey-user-system
+          uri: lb://joey-user-system
+          order: 3
+          predicates:
+            - Path=/joeyUserSystem/**
+          filters:
+            - StripPrefix= 1
+      discovery:
+        locator:
+          enabled: true # 请求路径前可以添加微服务名称
+          lower-case-service-id: true # 允许小写
+  datasource:
+    username: ****
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    password: ****
+    url: jdbc:mysql://****?serverTimezone=Asia/Shanghai&characterEncoding=utf-8
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+  redis:
+    host: localhost
+    jedis:
+      pool:
+        max-idle: 500
+        max-wait: 100
+        max-active: 1000
+        min-idle: 100
+    timeout: 1000
+mybatis-plus:
+  #配置MyBatis映射文件
+  mapper-locations: classpath:/mapper/*.xml
+  #配置MyBatis返回类型别名
+  type-aliases-package: com.mengshujoey.backend.pojo
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: true
+    jdbc-type-for-null: 'null'
+    default-statement-timeout: 3000
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
