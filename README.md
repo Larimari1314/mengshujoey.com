@@ -1,6 +1,6 @@
 # mengshujoey.com
 mengshujory.com Website source code sharing
-注意此项目无法通过已经分享的内容运行，因为缺少核心包和数据库文件，仅仅供大家参考学习使用。
+注意此项目无法通过已经分享的内容运行，因为缺少核心包和数据库文件，仅仅供大家参考学习使用。代码在master分支
 
 # 项目优势
 管理端登录采用spring security框架登录，权限细分到增删改，并在对应页面体现出来，其余就是增删改查操作。
