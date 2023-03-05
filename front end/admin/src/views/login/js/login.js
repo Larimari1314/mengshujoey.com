@@ -2,7 +2,6 @@ import { isPassword } from '@/utils/validate'
 import { adminLogin, getPublicKeyLogin } from '@/api/assessmentItems'
 import { decrypto, encryptedData, encryptoPSW } from '@/utils/encrypt'
 import dragVerifyImgRotate from 'vue-drag-verify-img-rotate'
-
 import Vue from 'vue'
 export default {
   name: '',
@@ -86,6 +85,18 @@ export default {
     document.body.style.overflow = 'auto'
   },
   mounted() {
+    document
+      .querySelector('.people')
+      .addEventListener('animationend', function () {
+        this.classList.remove('p-animtion')
+        this.classList.add('p-other-animtion')
+      })
+    document
+      .querySelector('.sphere')
+      .addEventListener('animationend', function () {
+        this.classList.remove('s-animtion')
+        this.classList.add('s-other-animtion')
+      })
     this.publicKey = decrypto(localStorage.getItem('mengshuPubey'), 520, 21)
     var that = this
     if (this.publicKey === undefined) {

@@ -133,6 +133,7 @@
     color: black;
   }
   .pc-project-information .row-project-sin .project-image-two {
+    height: 100px;
     padding-left: 40px;
     padding-top: 15px;
   }

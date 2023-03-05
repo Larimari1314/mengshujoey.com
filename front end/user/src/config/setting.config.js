@@ -4,8 +4,8 @@
 const setting = {
   //后端url
   // backendUrl: window.location.href + '/joey-admin-system/joeyAdminSystem/',
-  // backendUrl: 'http://mengshujoey.com/mengshujoeyapi/joeyUserSystem/',
-  backendUrl: 'http://192.168.109.233:8082/joey-user-system/joeyUserSystem/',
+  backendUrl: 'http://mengshujoey.com/mengshujoeyapi/joeyUserSystem/',
+  // backendUrl: 'http://192.168.13.233:8082/joey-user-system/joeyUserSystem/',
   // 开发以及部署时的URL
   publicPath: '',
   // 生产环境构建文件的目录名

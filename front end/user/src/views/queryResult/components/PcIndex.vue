@@ -165,6 +165,9 @@
 <script src="@/views/queryResult/components/js/PcIndexQuery.js"></script>
 
 <style scoped>
+  .query-list-child {
+    height: 10px;
+  }
   .query-card .query-list-child .query-list-child-single {
     font-family: 楷书, serif;
     text-align: left;
