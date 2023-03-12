@@ -24,6 +24,7 @@ public class TimedTasks {
     /**
      * 每月十五号凌晨3点十分刷新数据（避免用户出现数据显示错误的消息）刷新公钥私钥数据
      */
+//    @Scheduled(cron = "*/5 * * * * ?")
     @Scheduled(cron = "0 15 3 10 * ?")
     public void refreshEncryptedData() {
         timedTasksService.refreshEncryptedData();

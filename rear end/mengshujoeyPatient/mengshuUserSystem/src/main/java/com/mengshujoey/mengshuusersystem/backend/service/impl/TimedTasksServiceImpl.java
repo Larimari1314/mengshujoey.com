@@ -2,23 +2,31 @@ package com.mengshujoey.mengshuusersystem.backend.service.impl;
 
 import com.mengCommon.backend.dao.DailyActivityRecordsMapper;
 import com.mengCommon.backend.dao.EvaluationBasicInformationMapper;
+import com.mengCommon.backend.form.RabbitMessage;
 import com.mengCommon.backend.pojo.DailyActivityRecords;
+import com.mengCommon.common.common.http.RabbitStatus;
+import com.mengCommon.common.common.http.RedisCache;
 import com.mengCommon.common.common.http.ResponseResult;
 import com.mengCommon.common.utils.IdWorker;
+import com.mengshujoey.mengshuusersystem.backend.service.ConstantItemService;
 import com.mengshujoey.mengshuusersystem.backend.service.TimedTasksService;
 import com.mengshujoey.mengshuusersystem.common.config.Statistic;
 import org.apache.commons.lang.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.HyperLogLogOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * application name:mengshujoeyPatient - TimedTasksServiceImpl
@@ -42,12 +50,26 @@ public class TimedTasksServiceImpl implements TimedTasksService {
     private DailyActivityRecordsMapper dailyActivityRecordsMapper;
     @Autowired
     private EvaluationBasicInformationMapper evaluationBasicInformationMapper;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+    @Value("${redisCache.cacheEncryption}")
+    private Boolean redisCache;
+    @Autowired
+    private ConstantItemService constantItemService;
 
     @Override
     public void refreshEncryptedData() {
         String privateKeyString = RandomStringUtils.randomAlphanumeric(16);
         BoundHashOperations encryptedData = redisTemplate.boundHashOps(TimedTasksServiceImpl.REDIS_ENCRYPTED_DATA);
-
+        //更新私钥缓存
+        if (redisCache) {
+            //采用方案一则删除全部缓存数据
+            //rabbitMQ发送更新数据
+            RabbitMessage rabbitMessage = new RabbitMessage().setId(null).setRedisCache(Arrays.asList(RedisCache.values()).stream().map(s -> {
+                return s.name();
+            }).collect(Collectors.toList())).setStatus(RabbitStatus.ADD.name());
+            constantItemService.mainDataFlush(rabbitMessage);
+        }
         encryptedData.put(TimedTasksServiceImpl.REDIS_KEY_STRING, privateKeyString);
     }
 
@@ -91,9 +113,9 @@ public class TimedTasksServiceImpl implements TimedTasksService {
         BoundHashOperations boundHashOperations = redisTemplate.boundHashOps(Statistic.project_click_number.name());
         Set<String> keys = boundHashOperations.keys();
         for (String key : keys) {
-            log.debug("点击视频id：{},点击量：{}", key,boundHashOperations.get(key));
+            log.debug("点击视频id：{},点击量：{}", key, boundHashOperations.get(key));
             //更新数据库
-            evaluationBasicInformationMapper.countIndividualClicks(key,Integer.parseInt(boundHashOperations.get(key)+""));
+            evaluationBasicInformationMapper.countIndividualClicks(key, Integer.parseInt(boundHashOperations.get(key) + ""));
         }
         redisTemplate.delete(Statistic.project_click_number.name());
     }

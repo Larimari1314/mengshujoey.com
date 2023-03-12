@@ -52,11 +52,7 @@ public class ConstantItemServiceImpl extends ServiceImpl<ConstantItemMapper, Con
             }
         } else {
             //id不得为空则对id进行操作
-
-
             log.info("删除命令执行了{}",message);
-
-
             for (String redisName : message.getRedisCache()) {
                 flushCode(redisName);
                 //删除key
@@ -66,7 +62,6 @@ public class ConstantItemServiceImpl extends ServiceImpl<ConstantItemMapper, Con
                     log.error("数组类型不支持转化====>{}", message);
                     throw new MessageException("消息类型不支持转化!");
                 } else {
-                    System.out.println(message.getId());
                     for (String id : message.getId()) {
                         CONSTANTITEMS.lock();
                         try {
@@ -82,7 +77,6 @@ public class ConstantItemServiceImpl extends ServiceImpl<ConstantItemMapper, Con
                         }
                     }
                 }
-
             }
         }
     }

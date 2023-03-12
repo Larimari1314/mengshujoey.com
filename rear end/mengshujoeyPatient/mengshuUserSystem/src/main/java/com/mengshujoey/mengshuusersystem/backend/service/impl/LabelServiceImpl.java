@@ -8,8 +8,10 @@ import com.mengCommon.common.common.http.RedisCache;
 import com.mengCommon.common.common.http.ResponseResult;
 import com.mengCommon.common.common.http.StatusCode;
 import com.mengshujoey.mengshuusersystem.backend.service.LabelService;
+import com.mengshujoey.mengshuusersystem.common.config.aopConfig.ReturnProcess;
 import com.mengshujoey.mengshuusersystem.common.sercurity.utils.EncryptDataUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.BoundValueOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -35,17 +37,20 @@ import java.util.concurrent.locks.ReentrantLock;
 @Service
 public class LabelServiceImpl extends ServiceImpl<LabelMapper, Label>
         implements LabelService {
-    private ReentrantLock LABEL_LOCK=new ReentrantLock();
+    private ReentrantLock LABEL_LOCK = new ReentrantLock();
+    @Value("${redisCache.cacheEncryption}")
+    private Boolean redisCache;
     @Autowired
     private RedisTemplate redisTemplate;
     @Autowired
     private LabelMapper labelMapper;
+    @ReturnProcess
     @Override
     public ResponseResult<String> getLabelValue() {
         //从redis中查找数据
         BoundValueOperations labelValue = redisTemplate.boundValueOps(RedisCache.labelValue.toString());
         Object labelList = labelValue.get();
-        if(!ObjectUtils.isEmpty(labelList)){
+        if (!ObjectUtils.isEmpty(labelList)) {
             //说明数据存在
             return ResponseResult.getSuccessResult(String.valueOf(labelList), "Label data found successfully");
         }
@@ -55,29 +60,37 @@ public class LabelServiceImpl extends ServiceImpl<LabelMapper, Label>
         try {
             //再次查询防止重复添加
             Object labelListTwo = labelValue.get();
-            if(!ObjectUtils.isEmpty(labelListTwo)){
+            if (!ObjectUtils.isEmpty(labelListTwo)) {
                 return ResponseResult.getSuccessResult(String.valueOf(labelListTwo), "Label data found successfully");
-            }else{
+            } else {
                 //不存在，查询数据库
                 ArrayList<Map<String, Object>> labelArrayList = labelMapper.tabDropDown();
                 //加密存储到redis中并返回
                 String privateKey = (String) redisTemplate.boundHashOps(TimedTasksServiceImpl.REDIS_ENCRYPTED_DATA).get(TimedTasksServiceImpl.REDIS_KEY_STRING);
-                if(privateKey==null){
+                if (privateKey == null) {
                     //钥匙为空
-                    return ResponseResult.getErrorResult("The website is not currently initialized, please refresh the interface and try again", StatusCode.BAD_REQUEST,null);
+                    return ResponseResult.getErrorResult("The website is not currently initialized, please refresh the interface and try again", StatusCode.BAD_REQUEST, null);
                 }
                 String encryptData = null;
                 try {
-                    encryptData = EncryptDataUtils.encrypt(JSON.toJSONString(labelArrayList),privateKey);
+                    encryptData = EncryptDataUtils.encrypt(JSON.toJSONString(labelArrayList), privateKey);
                     //将数据存储到redis中
-                    labelValue.set(encryptData);
+                    if (redisCache) {
+                        labelValue.set(encryptData);
+                    } else {
+                        labelValue.set(JSON.toJSONString(labelArrayList));
+                    }
                 } catch (Exception e) {
                     log.error("An error occurred in the encryption process");
                     throw new RuntimeException(e);
                 }
-                return ResponseResult.getSuccessResult(encryptData, "Label data found successfully");
+                if (redisCache) {
+                    return ResponseResult.getSuccessResult(encryptData, "Label data found successfully");
+                } else {
+                    return ResponseResult.getSuccessResult(JSON.toJSONString(labelArrayList), "Label data found successfully");
+                }
             }
-        }finally {
+        } finally {
             LABEL_LOCK.unlock();
         }
     }

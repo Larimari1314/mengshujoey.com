@@ -88,3 +88,17 @@ page helper:
   reasonable: true
   supportMethodsArguments: true
   params: count=countSql
+#  方案1：缓存数据存储加密数据，但是更新的时候将缓存数据删除。
+#      优点：
+#      1、提升缓存数据的查询速度
+#      缺点：
+#      1、容易造成缓存雪崩问题
+#
+#  方案2：缓存数据存储铭文数据，但是每次查询的时候将缓存数据加密之后传输。
+#      优点：
+#      1、不会出现缓存雪崩问题
+#      缺点：
+#      1、每次查询需要将数据进行加密处理，高访问量的时候影响性能。
+# true采用方案1，false：采用方案2
+redisCache:
+  cacheEncryption: true  # !!! 注意修改此配置之前需要删除redis中缓存此页面的数据，防止缓存冲突 flushall

@@ -12,8 +12,10 @@ import com.mengCommon.common.common.http.RedisCache;
 import com.mengCommon.common.common.http.ResponseResult;
 import com.mengCommon.common.common.http.StatusCode;
 import com.mengshujoey.mengshuusersystem.backend.service.EvaluationBasicInformationService;
+import com.mengshujoey.mengshuusersystem.common.config.aopConfig.ReturnProcess;
 import com.mengshujoey.mengshuusersystem.common.sercurity.utils.EncryptDataUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -44,6 +46,9 @@ public class EvaluationBasicInformationServiceImpl extends ServiceImpl<Evaluatio
     @Autowired
     private EvaluationBasicInformationMapper evaluationBasicInformationMapper;
 
+    @Value("${redisCache.cacheEncryption}")
+    private Boolean redisCache;
+    @ReturnProcess
     @Override
     public ResponseResult<String> queryEvaluationBasic(String basicId) {
         if (basicId.length() > 20) {
@@ -81,12 +86,25 @@ public class EvaluationBasicInformationServiceImpl extends ServiceImpl<Evaluatio
             String encryptData = null;
             try {
                 encryptData = EncryptDataUtils.encrypt(JSON.toJSONString(queryProjectByUser), privateKey);
-                projectSingle.put(basicId, encryptData);
+                if(redisCache){
+                    //方案1
+                    projectSingle.put(basicId, encryptData);
+                }else{
+                    //方案2
+                    projectSingle.put(basicId, JSON.toJSONString(queryProjectByUser));
+                }
             } catch (Exception e) {
                 log.error("An error occurred in the encryption process");
                 throw new RuntimeException(e);
             }
-            return ResponseResult.getSuccessResult(encryptData, "The data query succeeded");
+            if(redisCache){
+                //将加密数据进行返回
+                // 方案1
+                return ResponseResult.getSuccessResult(encryptData, "The data query succeeded");
+            }else{
+                //方案2
+                return ResponseResult.getSuccessResult(JSON.toJSONString(queryProjectByUser), "The data query succeeded");
+            }
         } finally {
             PROJECT_LOCK_SINGLE.unlock();
         }

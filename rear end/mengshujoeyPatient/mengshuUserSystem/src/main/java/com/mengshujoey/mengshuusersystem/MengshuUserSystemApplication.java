@@ -8,6 +8,7 @@ import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.netflix.hystrix.dashboard.EnableHystrixDashboard;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -30,6 +31,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @ComponentScan({"com.mengCommon", "com.mengshujoey.mengshuusersystem"})
 @EnableScheduling
 @SpringBootApplication
+@EnableAspectJAutoProxy
 public class MengshuUserSystemApplication {
 
     public static void main(String[] args) {

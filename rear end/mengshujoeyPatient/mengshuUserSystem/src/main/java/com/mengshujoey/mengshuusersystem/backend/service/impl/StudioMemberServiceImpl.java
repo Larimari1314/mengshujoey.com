@@ -8,8 +8,10 @@ import com.mengCommon.common.common.http.RedisCache;
 import com.mengCommon.common.common.http.ResponseResult;
 import com.mengCommon.common.common.http.StatusCode;
 import com.mengshujoey.mengshuusersystem.backend.service.StudioMemberService;
+import com.mengshujoey.mengshuusersystem.common.config.aopConfig.ReturnProcess;
 import com.mengshujoey.mengshuusersystem.common.sercurity.utils.EncryptDataUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.BoundValueOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -35,28 +37,29 @@ import java.util.concurrent.locks.ReentrantLock;
 @Service
 public class StudioMemberServiceImpl extends ServiceImpl<StudioMemberMapper, StudioMember>
         implements StudioMemberService {
+    private static final ReentrantLock STUDIO_LOCK = new ReentrantLock();
     @Autowired
     private RedisTemplate redisTemplate;
+    @Value("${redisCache.cacheEncryption}")
+    private Boolean redisCache;
     @Autowired
     private StudioMemberMapper studioMemberMapper;
-
-    private static final ReentrantLock STUDIO_LOCK=new ReentrantLock();
-
+    @ReturnProcess
     @Override
     public ResponseResult<String> queryStudioMember() {
         //从redis中查询信息
         BoundValueOperations studioList = redisTemplate.boundValueOps(RedisCache.studioList.toString());
         Object studioMemberOneList = studioList.get();
-        if(!ObjectUtils.isEmpty(studioMemberOneList)){
+        if (!ObjectUtils.isEmpty(studioMemberOneList)) {
             //返回数据
             return ResponseResult.getSuccessResult(String.valueOf(studioMemberOneList), "The query of studio member information was successful");
-        }else{
+        } else {
             //为空
             STUDIO_LOCK.lock();
             try {
                 //查询是否存在
                 Object studioMemberTwoList = studioList.get();
-                if(!ObjectUtils.isEmpty(studioMemberTwoList)){
+                if (!ObjectUtils.isEmpty(studioMemberTwoList)) {
                     return ResponseResult.getSuccessResult(String.valueOf(studioMemberTwoList), "The query of studio member information was successful");
                 }
                 //查询数据
@@ -64,21 +67,29 @@ public class StudioMemberServiceImpl extends ServiceImpl<StudioMemberMapper, Stu
                 //加密数据
                 //加密存储到redis中并返回
                 String privateKey = (String) redisTemplate.boundHashOps(TimedTasksServiceImpl.REDIS_ENCRYPTED_DATA).get(TimedTasksServiceImpl.REDIS_KEY_STRING);
-                if(privateKey==null){
+                if (privateKey == null) {
                     //钥匙为空
-                    return ResponseResult.getErrorResult("The website is not currently initialized, please refresh the interface and try again", StatusCode.BAD_REQUEST,null);
+                    return ResponseResult.getErrorResult("The website is not currently initialized, please refresh the interface and try again", StatusCode.BAD_REQUEST, null);
                 }
                 String encryptData = null;
                 try {
-                    encryptData = EncryptDataUtils.encrypt(JSON.toJSONString(arrayList),privateKey);
+                    encryptData = EncryptDataUtils.encrypt(JSON.toJSONString(arrayList), privateKey);
                     //将数据存储到redis中
-                    studioList.set(String.valueOf(encryptData));
+                    if(redisCache){
+                        studioList.set(String.valueOf(encryptData));
+                    }else{
+                        studioList.set(JSON.toJSONString(arrayList));
+                    }
                 } catch (Exception e) {
                     log.error("An error occurred in the encryption process");
                     throw new RuntimeException(e);
                 }
-                return ResponseResult.getSuccessResult(encryptData, "The data query succeeded");
-            }finally {
+                if(redisCache){
+                    return ResponseResult.getSuccessResult(encryptData, "The data query succeeded");
+                }else{
+                    return ResponseResult.getSuccessResult(JSON.toJSONString(arrayList), "Label data found successfully");
+                }
+            } finally {
                 STUDIO_LOCK.unlock();
             }
         }

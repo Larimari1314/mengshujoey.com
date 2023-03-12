@@ -7,6 +7,7 @@ import com.mengshujoey.mengshuusersystem.common.sercurity.utils.HttpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.HyperLogLogOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -32,7 +33,6 @@ public class StatisticsServiceImpl implements StatisticsService {
     private static final ReentrantLock reentrantLock = new ReentrantLock();
     @Autowired
     private RedisTemplate redisTemplate;
-
     @Override
     public ResponseResult<String> countDailyActivity(HttpServletRequest request) {
         String ipAdress = HttpUtils.getIpAddress(request);

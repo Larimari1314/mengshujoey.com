@@ -13,8 +13,10 @@ import com.mengCommon.common.common.http.ResponseResult;
 import com.mengCommon.common.common.http.StatusCode;
 import com.mengCommon.common.utils.IdWorker;
 import com.mengshujoey.mengshuusersystem.backend.service.EvaluationDetailInformationService;
+import com.mengshujoey.mengshuusersystem.common.config.aopConfig.ReturnProcess;
 import com.mengshujoey.mengshuusersystem.common.sercurity.utils.EncryptDataUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.BoundValueOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -49,7 +51,9 @@ public class EvaluationDetailInformationServiceImpl extends ServiceImpl<Evaluati
     private RedisTemplate redisTemplate;
     @Autowired
     private EvaluationBasicInformationMapper evaluationBasicInformationMapper;
-
+    @Value("${redisCache.cacheEncryption}")
+    private Boolean redisCache;
+    @ReturnProcess
     @Override
     public ResponseResult<String> getMilkTeaEvaluationData(QueryEvaluationDetailByUser evaluationDetail) {
         if (evaluationDetail.getPage() > 50) {
@@ -84,13 +88,27 @@ public class EvaluationDetailInformationServiceImpl extends ServiceImpl<Evaluati
                         try {
                             encryptData = EncryptDataUtils.encrypt(JSON.toJSONString(pageInfo),privateKey);
                             //System.out.println(EncryptDataUtils.decryptByPrivateSublevelKey((String) redisTemplate.boundHashOps(TimedTasksServiceImpl.REDIS_ENCRYPTED_DATA).get(TimedTasksServiceImpl.REDIS_PRIVATE_KEY_STRING), encryptData));
+                            //判断缓存方案
                             //将数据存储到redis中
-                            mainEvaluationDetail.put(String.valueOf(evaluationDetail.getPage()), encryptData);
+                            if(redisCache){
+                                //采用方案1
+                                mainEvaluationDetail.put(String.valueOf(evaluationDetail.getPage()),encryptData);
+                            }else{
+                                //采用方案2
+                                mainEvaluationDetail.put(String.valueOf(evaluationDetail.getPage()),JSON.toJSONString(pageInfo));
+                            }
                         } catch (Exception e) {
                             log.error("An error occurred in the encryption process");
                             throw new RuntimeException(e);
                         }
-                        return ResponseResult.getSuccessResult(encryptData, "The data query succeeded");
+                        //判断缓存方案
+                        if(redisCache){
+                            //方案1
+                            return ResponseResult.getSuccessResult(encryptData, "The data query succeeded");
+                        }else {
+                            //方案2
+                            return ResponseResult.getSuccessResult(JSON.toJSONString(pageInfo), "The data query succeeded");
+                        }
                     } else {
                         //说明不存在数据
                         return ResponseResult.getErrorResult("The number of pages exceeds the limit", StatusCode.Not_Acceptable, null);
@@ -133,7 +151,7 @@ public class EvaluationDetailInformationServiceImpl extends ServiceImpl<Evaluati
             }
         }
     }
-
+    @ReturnProcess
     @Override
     public ResponseResult<String> findAllVideo(QueryEvaluationDetailByUser evaluationDetail) {
         if(evaluationDetail.getPage()>100){
@@ -167,13 +185,25 @@ public class EvaluationDetailInformationServiceImpl extends ServiceImpl<Evaluati
                             encryptData = EncryptDataUtils.encrypt(JSON.toJSONString(pageInfo),privateKey);
                             //System.out.println(EncryptDataUtils.decryptByPrivateSublevelKey((String) redisTemplate.boundHashOps(TimedTasksServiceImpl.REDIS_ENCRYPTED_DATA).get(TimedTasksServiceImpl.REDIS_PRIVATE_KEY_STRING), encryptData));
                             //将数据存储到redis中
-                            mainEvaluationDetail.put(String.valueOf(evaluationDetail.getPage()), encryptData);
+                            //判断缓存方案
+                            if(redisCache){
+                                //采用方案1
+                                mainEvaluationDetail.put(String.valueOf(evaluationDetail.getPage()), encryptData);
+                            }else{
+                                //采用方案2
+                                mainEvaluationDetail.put(String.valueOf(evaluationDetail.getPage()), JSON.toJSONString(pageInfo));
+                            }
                         } catch (Exception e) {
                             log.error("An error occurred in the encryption process");
                             throw new RuntimeException(e);
                         }
-                        return ResponseResult.getSuccessResult(encryptData, "The data query succeeded");
-
+                        if(redisCache){
+                            //方案1
+                            return ResponseResult.getSuccessResult(encryptData, "The data query succeeded");
+                        }else{
+                            //方案2
+                            return ResponseResult.getSuccessResult(JSON.toJSONString(pageInfo), "The data query succeeded");
+                        }
                     } else {
                         //说明不存在数据
                         return ResponseResult.getErrorResult("The number of pages exceeds the limit", StatusCode.Not_Acceptable, null);
