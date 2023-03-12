@@ -5,6 +5,12 @@ mengshujory.com Website source code sharing
 # 项目优势
 管理端登录采用spring security框架登录，权限细分到增删改，并在对应页面体现出来，其余就是增删改查操作。
 用户端采用两层缓存，第一层服务器端使用redis缓存，第二层页面数据加密缓存到客户端，整体采用RSA、ECB加密策略，使数据传输更加安全。页面支持多语言切换，多种动画美化页面，适配手机端和电脑端。
+
+v1.1更新概要：
+修改缓存存储策略： 
+方案1：缓存数据存储加密数据，但是更新的时候将缓存数据删除。
+方案2：缓存数据存储铭文数据，但是每次查询的时候将缓存数据加密之后传输。
+用户可以自行选择存储策略，修改配置在配置文件中redisCache.cacheEncryption中修改配置
 # 项目截图
 用户端
 ![image](https://user-images.githubusercontent.com/87918586/221320880-7b95c74a-18a5-400c-a36a-c69ee6861c59.png)
