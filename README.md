@@ -19,6 +19,7 @@ mengshujory.com Website source code sharing
 1、修改首页数据更新二次刷新问题  
 2、修改搜索界面空数据提示初显示问题  
 3、优化搜索速度  
+4、全屏模式下，搜索界面退出问题  
 
 # 项目截图
 用户端
