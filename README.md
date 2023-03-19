@@ -21,6 +21,10 @@ mengshujory.com Website source code sharing
 3、优化搜索速度  
 4、全屏模式下，搜索界面退出问题  
 
+## 未来更新(可能)
+1、添加小程序端，可通过WeChat小程序入口查询测评信息 
+
+
 # 项目截图
 用户端
 ![image](https://user-images.githubusercontent.com/87918586/221320880-7b95c74a-18a5-400c-a36a-c69ee6861c59.png)
